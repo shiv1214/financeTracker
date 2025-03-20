@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Finance Forecaster</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 32px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        input[type="file"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+            transition: border 0.3s ease;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button svg {
+            margin-right: 8px;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 0;
+        }
+
+        .chart-container {
+            position: relative;
+            margin: 20px 0;
+            height: 400px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            padding: 15px;
+            background-color: #fff;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .chart-container h3 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .insight-section {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .insight-section h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-size: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .sample-data {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #ebf5fb;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .sample-data h3 {
+            margin-top: 0;
+            color: #2980b9;
+        }
+
+        .sample-data button {
+            background-color: #2980b9;
+            margin-top: 10px;
+        }
+
+        .sample-data button:hover {
+            background-color: #1c6ea4;
+        }
+
+        .error {
+            color: #e74c3c;
+            background-color: #fadbd8;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            padding: 20px;
+        }
+
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .tab-container {
+            margin-bottom: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            margin-right: 5px;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background-color: #fff;
+            border-color: #ddd;
+            color: #3498db;
+            font-weight: 600;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            background-color: #fff;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h4 {
+            margin-top: 0;
+            color: #7f8c8d;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+
+        .stat-trend {
+            font-size: 14px;
+        }
+
+        .trend-up {
+            color: #e74c3c;
+        }
+
+        .trend-down {
+            color: #27ae60;
+        }
+
+        .insights-rendered h2,
+        .insights-rendered h3 {
+            color: #2c3e50;
+        }
+
+        .insights-rendered ul {
+            padding-left: 20px;
+        }
+
+        .insights-rendered li {
+            margin-bottom: 10px;
+        }
+
+        .insights-rendered em {
+            color: #3498db;
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .category-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="margin-right: 10px; vertical-align: text-bottom;">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            Personal Finance Forecaster
+        </h1>
+        <div id="google_translate_element"></div>
+        <div class="sample-data">
+            <h3>Need sample data?</h3>
+            <p>Click below to generate sample spending and income data for testing.</p>
+            <button id="sampleDataBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Generate Sample Data
+            </button>
+            <div id="sampleDataResult"></div>
+        </div>
+
+        <form id="forecastForm">
+            <div class="form-group">
+                <label for="spendingFile">Spending CSV File:</label>
+                <input type="file" id="spendingFile" accept=".csv" required>
+                <small>Format: date,amount,category</small>
+            </div>
+
+            <div class="form-group">
+                <label for="incomeFile">Income CSV File (optional):</label>
+                <input type="file" id="incomeFile" accept=".csv">
+                <small>Format: date,amount</small>
+            </div>
+
+            <div class="form-group">
+                <label for="forecastPeriods">Forecast Periods:</label>
+                <input type="number" id="forecastPeriods" value="12" min="1" max="24">
+            </div>
+
+            <div class="form-group">
+                <label for="userQuery">Analysis Question (optional):</label>
+                <textarea id="userQuery" rows="3"
+                    placeholder="E.g., How can I reduce my spending on dining?"></textarea>
+            </div>
+
+            <button type="submit">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                Generate Forecast
+            </button>
+        </form>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Generating forecast... Please wait.</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="result" class="result" style="display: none;">
+            <div class="stats-container" id="statsContainer"></div>
+
+            <div class="tab-container">
+                <ul class="tabs">
+                    <li class="tab active" data-tab="overview">Overview</li>
+                    <li class="tab" data-tab="categories">Categories</li>
+                    <li class="tab" data-tab="savings">Savings Analysis</li>
+                </ul>
+
+                <div class="tab-content active" id="overview">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Financial Overview</h3>
+                            <div class="category-legend" id="overviewLegend"></div>
+                        </div>
+                        <canvas id="overviewChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="categories">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Category Breakdown</h3>
+                            <div class="category-legend" id="categoriesLegend"></div>
+                        </div>
+                        <canvas id="categoriesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="savings">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Savings Analysis</h3>
+                            <div class="category-legend" id="savingsLegend"></div>
+                        </div>
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-section">
+                <h3>AI-Generated Insights</h3>
+                <div id="insights" class="insights-rendered"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiBaseUrl = 'http://localhost:5000'; // Replace with your actual API URL
+        let charts = {};
+
+        // Sample data generation
+        document.getElementById('sampleDataBtn').addEventListener('click', async () => {
+            try {
+                const sampleDataResult = document.getElementById('sampleDataResult');
+                sampleDataResult.innerHTML = 'Generating sample data...';
+
+                const response = await fetch(`${apiBaseUrl}/api/sample-data`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // Get spending data
+                    const spendingResponse = await fetch(`${apiBaseUrl}${data.sample_spending_url}`);
+                    const spendingData = await spendingResponse.json();
+
+                    // Get income data
+                    const incomeResponse = await fetch(`${apiBaseUrl}${data.sample_income_url}`);
+                    const incomeData = await incomeResponse.json();
+
+                    // Create downloadable files
+                    const spendingBlob = new Blob([spendingData.data], { type: 'text/csv' });
+                    const spendingUrl = URL.createObjectURL(spendingBlob);
+
+                    const incomeBlob = new Blob([incomeData.data], { type: 'text/csv' });
+                    const incomeUrl = URL.createObjectURL(incomeBlob);
+
+                    sampleDataResult.innerHTML = `
+                        <p>Sample data generated successfully!</p>
+                        <p>
+                            <a href="${spendingUrl}" download="sample_spending.csv">Download Spending Data</a>
+                            <br>
+                            <a href="${incomeUrl}" download="sample_income.csv">Download Income Data</a>
+                        </p>
+                    `;
+                } else {
+                    sampleDataResult.innerHTML = `Error: ${data.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                console.error('Error generating sample data:', error);
+                document.getElementById('sampleDataResult').innerHTML = `Error: ${error.message}`;
+            }
+        });
+
+        // Tab switching functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and content
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                // Add active class to the clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+
+                // Resize charts to fix rendering issues
+                if (charts[tab.dataset.tab]) {
+                    charts[tab.dataset.tab].resize();
+                }
+            });
+        });
+
+        // Forecast form submission
+        document.getElementById('forecastForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const spendingFile = document.getElementById('spendingFile').files[0];
+            if (!spendingFile) {
+                showError('Please select a spending CSV file.');
+                return;
+            }
+
+            const incomeFile = document.getElementById('incomeFile').files[0];
+            const forecastPeriods = document.getElementById('forecastPeriods').value;
+            const userQuery = document.getElementById('userQuery').value;
+
+            // Show loading
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('result').style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('spending_file', spendingFile);
+
+                if (incomeFile) {
+                    formData.append('income_file', incomeFile);
+                }
+
+                formData.append('forecast_periods', forecastPeriods);
+
+                if (userQuery) {
+                    formData.append('user_query', userQuery);
+                }
+
+                const response = await fetch(`${apiBaseUrl}/api/forecast`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayResults(data);
+                } else {
+                    showError(`Error: ${data.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error generating forecast:', error);
+                showError(`Error: ${error.message}`);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+
+        // Mock data for testing UI without API
+        function getMockData() {
+            return {
+                data: {
+                    forecast: {
+                        dining: {
+                            dates: ["2025-04-30", "2025-05-31", "2025-06-30", "2025-07-31", "2025-08-31", "2025-09-30"],
+                            values: [851.23, 726.47, 892.15, 933.78, 877.25, 803.45]
+                        },
+                        groceries: {
+                            dates: ["2025-04-30", "2025-05-31", "2025-06-30", "2025-07-31", "2025-08-31", "2025-09-30"],
+                            values: [1731.45, 1794.60, 1820.32, 1754.91, 1802.56, 1785.23]
+                        },
+                        income: {
+                            dates: ["2025-04-30", "2025-05-31", "2025-06-30", "2025-07-31", "2025-08-31", "2025-09-30"],
+                            values: [6422.95, 6458.76, 6501.23, 6532.78, 6576.12, 6612.45]
+                        },
+                        savings: {
+                            dates: ["2025-04-30", "2025-05-31", "2025-06-30", "2025-07-31", "2025-08-31", "2025-09-30"],
+                            values: [-3071.33, -3610.05, -3422.78, -3245.67, -3512.34, -3175.22]
+                        }
+                    },
+                    historical: {
+                        dining: {
+                            dates: ["2024-10-31", "2024-11-30", "2024-12-31", "2025-01-31", "2025-02-28", "2025-03-31"],
+                            values: [795.32, 822.56, 912.78, 835.45, 863.21, 845.67]
+                        },
+                        groceries: {
+                            dates: ["2024-10-31", "2024-11-30", "2024-12-31", "2025-01-31", "2025-02-28", "2025-03-31"],
+                            values: [1655.49, 1712.35, 1823.75, 1698.23, 1725.68, 1705.42]
+                        },
+                        income: {
+                            dates: ["2024-10-31", "2024-11-30", "2024-12-31", "2025-01-31", "2025-02-28", "2025-03-31"],
+                            values: [6223.96, 6245.87, 6315.45, 6342.12, 6378.54, 6402.45]
+                        }
+                    },
+                    savings_analysis: {
+                        dates: ["2024-10-31", "2024-11-30", "2024-12-31", "2025-01-31", "2025-02-28", "2025-03-31"],
+                        income: [6223.96, 6245.87, 6315.45, 6342.12, 6378.54, 6402.45],
+                        savings: [-2744.86, -2850.52, -3478.25, -2865.45, -2956.32, -3025.78],
+                        savings_rate: [-44.10, -45.64, -55.08, -45.18, -46.35, -47.26],
+                        spending: [8968.82, 9096.39, 9793.70, 9207.57, 9334.86, 9428.23]
+                    }
+                },
+                insights: "## Comprehensive Financial Analysis\n\n- *Overall Trends:* Spending peaks in summer and holiday seasons.\n- *Category Insights:* Dining is consistent, travel is volatile.\n- *Savings:* Negative savings rate; overspending is a concern.\n- *Recommendations:* Reduce dining expenses, plan travel off-season.\n- *Forecast:* High spending continues; savings remain negative.",
+                status: "success",
+                timestamp: "2025-03-20T12:17:09.901372"
+            };
+        }
+
+        // For testing UI without backend
+        // window.addEventListener('load', () => {
+        //     const mockData = getMockData();
+        //     displayResults(mockData);
+        // });
+
+        function displayResults(data) {
+            // Destroy any existing charts to prevent memory leaks
+            Object.values(charts).forEach(chart => chart.destroy && chart.destroy());
+            charts = {};
+
+            const resultDiv = document.getElementById('result');
+            const insightsDiv = document.getElementById('insights');
+
+            // Display insights with Markdown formatting
+            insightsDiv.innerHTML = marked.parse(data.insights);
+
+            // Display summary statistics
+            displayStats(data);
+
+            // Create charts
+            createOverviewChart(data);
+            createCategoriesChart(data);
+            createSavingsChart(data);
+
+            // Show the result
+            resultDiv.style.display = 'block';
+
+            // Trigger resize for the active tab's chart
+            const activeTab = document.querySelector('.tab.active').dataset.tab;
+            if (charts[activeTab]) {
+                charts[activeTab].resize();
+            }
+        }
+
+        function displayStats(data) {
+            const statsContainer = document.getElementById('statsContainer');
+            statsContainer.innerHTML = '';
+
+            // Get the most recent data points
+            const latestDate = data.data.historical.income.dates.slice(-1)[0];
+            const forecastDate = data.data.forecast.income.dates[0];
+
+            const categories = Object.keys(data.data.historical);
+            const spendingCategories = categories.filter(c => c !== 'income');
+
+            // Calculate total spending (most recent historical)
+            let totalSpending = 0;
+            spendingCategories.forEach(category => {
+                const values = data.data.historical[category].values;
+                totalSpending += values[values.length - 1];
+            });
+
+            // Calculate forecast spending
+            let forecastSpending = 0;
+            spendingCategories.forEach(category => {
+                forecastSpending += data.data.forecast[category].values[0];
+            });
+
+            // Calculate spending trend
+            const spendingTrend = ((forecastSpending - totalSpending) / totalSpending) * 100;
+
+            // Get latest income and forecast
+            const latestIncome = data.data.historical.income.values.slice(-1)[0];
+            const forecastIncome = data.data.forecast.income.values[0];
+            const incomeTrend = ((forecastIncome - latestIncome) / latestIncome) * 100;
+
+            // Get latest savings rate (from savings_analysis)
+            const latestSavingsRate = data.data.savings_analysis.savings_rate.slice(-1)[0];
+            const forecastSavingsRate = (data.data.forecast.savings.values[0] / forecastIncome) * 100;
+            const savingsRateTrend = forecastSavingsRate - latestSavingsRate;
+
+            // Create stat cards
+            const statCards = [
+                {
+                    title: 'Current Income',
+                    value: `$${latestIncome.toFixed(2)}`,
+                    trend: incomeTrend,
+                    trendText: `${Math.abs(incomeTrend).toFixed(2)}% ${incomeTrend >= 0 ? 'increase' : 'decrease'} forecast`
+                },
+                {
+                    title: 'Current Spending',
+                    value: `$${totalSpending.toFixed(2)}`,
+                    trend: spendingTrend,
+                    trendText: `${Math.abs(spendingTrend).toFixed(2)}% ${spendingTrend >= 0 ? 'increase' : 'decrease'} forecast`
+                },
+                {
+                    title: 'Savings Rate',
+                    value: `${latestSavingsRate.toFixed(2)}%`,
+                    trend: savingsRateTrend,
+                    trendText: `${Math.abs(savingsRateTrend).toFixed(2)}% ${savingsRateTrend >= 0 ? 'improvement' : 'decline'} forecast`
+                },
+                {
+                    title: 'Monthly Balance',
+                    value: `$${(latestIncome - totalSpending).toFixed(2)}`,
+                    trend: (latestIncome - totalSpending) >= 0 ? 1 : -1,
+                    trendText: (latestIncome - totalSpending) >= 0 ? 'Positive balance' : 'Negative balance'
+                }
+            ];
+
+            statCards.forEach(stat => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <h4>${stat.title}</h4>
+                    <div class="stat-value">${stat.value}</div>
+                    <div class="stat-trend ${stat.trend >= 0 ? 'trend-up' : 'trend-down'}">
+                        ${stat.trend !== null ? stat.trendText : ''}
+                    </div>
+                `;
+                statsContainer.appendChild(card);
+            });
+        }
+
+        function createOverviewChart(data) {
+            const ctx = document.getElementById('overviewChart').getContext('2d');
+
+            // Combine historical and forecast data
+            const allDates = [
+                ...data.data.historical.income.dates,
+                ...data.data.forecast.income.dates
+            ];
+
+            const datasets = [];
+            const categories = new Set([
+                ...Object.keys(data.data.historical),
+                ...Object.keys(data.data.forecast)
+            ]);
+
+            // Color map for consistent colors
+            const colorMap = {
+                income: 'rgba(39, 174, 96, 0.7)',
+                savings: 'rgba(52, 152, 219, 0.7)',
+                dining: 'rgba(231, 76, 60, 0.7)',
+                groceries: 'rgba(241, 196, 15, 0.7)',
+                utilities: 'rgba(142, 68, 173, 0.7)',
+                rent: 'rgba(230, 126, 34, 0.7)',
+                transportation: 'rgba(41, 128, 185, 0.7)',
+                entertainment: 'rgba(26, 188, 156, 0.7)',
+                shopping: 'rgba(192, 57, 43, 0.7)',
+                travel: 'rgba(155, 89, 182, 0.7)'
+            };
+
+            // Create legend
+            const legendEl = document.getElementById('overviewLegend');
+            legendEl.innerHTML = '';
+
+            // Process each category
+            categories.forEach(category => {
+                // Determine color from map or generate a random one
+                const color = colorMap[category] || `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.7)`;
+
+                // Get historical data
+                let values = [];
+                if (data.data.historical[category]) {
+                    values = [...data.data.historical[category].values];
+                } else {
+                    // Fill with nulls for alignment
+                    values = Array(data.data.historical.income.dates.length).fill(null);
+                }
+
+                // Add forecast data
+                if (data.data.forecast[category]) {
+                    values = [...values, ...data.data.forecast[category].values];
+                } else {
+                    // Fill with nulls for alignment
+                    values = [...values, ...Array(data.data.forecast.income.dates.length).fill(null)];
+                }
+
+                // Add dataset
+                datasets.push({
+                    label: category.charAt(0).toUpperCase() + category.slice(1),
+                    data: values,
+                    borderColor: color,
+                    backgroundColor: color.replace('0.7', '0.2'),
+                    tension: 0.4,
+                    fill: false
+                });
+
+                // Add to legend
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                    <div class="legend-color" style="background-color: ${color}"></div>
+                    <span>${category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                `;
+                legendEl.appendChild(legendItem);
+            });
+
+                        // Create chart
+                        charts.overview = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: allDates,
+                                datasets: datasets
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        },
+                                        ticks: {
+                                            maxTicksLimit: 12
+                                        }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: {
+                                            borderDash: [5, 5]
+                                        },
+                                        ticks: {
+                                            callback: function (value) {
+                                                return '$' + value.toLocaleString();
+                                            }
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
+                                        callbacks: {
+                                            label: function (context) {
+                                                return context.dataset.label + ': $' + context.raw.toFixed(2);
+                                            }
+                                        }
+                                    },
+                                    annotation: {
+                                        annotations: {
+                                            line1: {
+                                                type: 'line',
+                                                xMin: data.data.historical.income.dates.length - 1,
+                                                xMax: data.data.historical.income.dates.length - 1,
+                                                borderColor: 'rgba(0, 0, 0, 0.5)',
+                                                borderWidth: 2,
+                                                borderDash: [6, 6],
+                                                label: {
+                                                    content: 'Forecast Start',
+                                                    position: 'start',
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                                    font: {
+                                                        size: 12
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    function createCategoriesChart(data) {
+                        const ctx = document.getElementById('categoriesChart').getContext('2d');
+
+                        // Combine historical and forecast data
+                        const allDates = [
+                            ...data.data.historical.income.dates,
+                            ...data.data.forecast.income.dates
+                        ];
+
+                        const datasets = [];
+                        const categories = new Set([
+                            ...Object.keys(data.data.historical),
+                            ...Object.keys(data.data.forecast)
+                        ]);
+
+                        // Filter out income and savings
+                        const spendingCategories = Array.from(categories).filter(
+                            category => category !== 'income' && category !== 'savings'
+                        );
+
+                        // Color map for consistent colors
+                        const colorMap = {
+                            dining: 'rgba(231, 76, 60, 0.7)',
+                            groceries: 'rgba(241, 196, 15, 0.7)',
+                            utilities: 'rgba(142, 68, 173, 0.7)',
+                            rent: 'rgba(230, 126, 34, 0.7)',
+                            transportation: 'rgba(41, 128, 185, 0.7)',
+                            entertainment: 'rgba(26, 188, 156, 0.7)',
+                            shopping: 'rgba(192, 57, 43, 0.7)',
+                            travel: 'rgba(155, 89, 182, 0.7)'
+                        };
+
+                        // Create legend
+                        const legendEl = document.getElementById('categoriesLegend');
+                        legendEl.innerHTML = '';
+
+                        // Process each spending category
+                        spendingCategories.forEach(category => {
+                            // Determine color from map or generate a random one
+                            const color = colorMap[category] || `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.7)`;
+
+                            // Get historical data
+                            let values = [];
+                            if (data.data.historical[category]) {
+                                values = [...data.data.historical[category].values];
+                            } else {
+                                // Fill with nulls for alignment
+                                values = Array(data.data.historical.income.dates.length).fill(null);
+                            }
+
+                            // Add forecast data
+                            if (data.data.forecast[category]) {
+                                values = [...values, ...data.data.forecast[category].values];
+                            } else {
+                                // Fill with nulls for alignment
+                                values = [...values, ...Array(data.data.forecast.income.dates.length).fill(null)];
+                            }
+
+                            // Add dataset
+                            datasets.push({
+                                label: category.charAt(0).toUpperCase() + category.slice(1),
+                                data: values,
+                                borderColor: color,
+                                backgroundColor: color.replace('0.7', '0.2'),
+                                tension: 0.4,
+                                fill: true
+                            });
+
+                            // Add to legend
+                            const legendItem = document.createElement('div');
+                            legendItem.className = 'legend-item';
+                            legendItem.innerHTML = `
+                    <div class="legend-color" style="background-color: ${color}"></div>
+                    <span>${category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                `;
+                            legendEl.appendChild(legendItem);
+                        });
+
+                        // Create chart
+                        charts.categories = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: allDates,
+                                datasets: datasets
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        },
+                                        ticks: {
+                                            maxTicksLimit: 12
+                                        }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: {
+                                            borderDash: [5, 5]
+                                        },
+                                        ticks: {
+                                            callback: function (value) {
+                                                return '$' + value.toLocaleString();
+                                            }
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
+                                        callbacks: {
+                                            label: function (context) {
+                                                return context.dataset.label + ': $' + context.raw.toFixed(2);
+                                            }
+                                        }
+                                    },
+                                    annotation: {
+                                        annotations: {
+                                            line1: {
+                                                type: 'line',
+                                                xMin: data.data.historical.income.dates.length - 1,
+                                                xMax: data.data.historical.income.dates.length - 1,
+                                                borderColor: 'rgba(0, 0, 0, 0.5)',
+                                                borderWidth: 2,
+                                                borderDash: [6, 6],
+                                                label: {
+                                                    content: 'Forecast Start',
+                                                    position: 'start',
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                                    font: {
+                                                        size: 12
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    function createSavingsChart(data) {
+                        const ctx = document.getElementById('savingsChart').getContext('2d');
+
+                        // Get savings analysis data
+                        const dates = data.data.savings_analysis.dates;
+                        const income = data.data.savings_analysis.income;
+                        const spending = data.data.savings_analysis.spending;
+                        const savings = data.data.savings_analysis.savings;
+                        const savingsRate = data.data.savings_analysis.savings_rate;
+
+                        // Get forecast data
+                        const forecastDates = data.data.forecast.income.dates;
+                        const forecastIncome = data.data.forecast.income.values;
+
+                        // Calculate forecast spending and savings
+                        let forecastSpending = [];
+                        let forecastSavings = [];
+                        let forecastSavingsRate = [];
+
+                        for (let i = 0; i < forecastDates.length; i++) {
+                            let monthlySpending = 0;
+                            Object.keys(data.data.forecast).forEach(category => {
+                                if (category !== 'income' && category !== 'savings') {
+                                    monthlySpending += data.data.forecast[category].values[i];
+                                }
+                            });
+
+                            forecastSpending.push(monthlySpending);
+                            const monthlySavings = forecastIncome[i] - monthlySpending;
+                            forecastSavings.push(monthlySavings);
+                            forecastSavingsRate.push((monthlySavings / forecastIncome[i]) * 100);
+                        }
+
+                        // Combine historical and forecast data
+                        const allDates = [...dates, ...forecastDates];
+                        const allIncome = [...income, ...forecastIncome];
+                        const allSpending = [...spending, ...forecastSpending];
+                        const allSavings = [...savings, ...forecastSavings];
+                        const allSavingsRate = [...savingsRate, ...forecastSavingsRate];
+
+                        // Create legend
+                        const legendEl = document.getElementById('savingsLegend');
+                        legendEl.innerHTML = '';
+
+                        const legendItems = [
+                            { label: 'Income', color: 'rgba(39, 174, 96, 0.7)' },
+                            { label: 'Spending', color: 'rgba(231, 76, 60, 0.7)' },
+                            { label: 'Savings', color: 'rgba(52, 152, 219, 0.7)' },
+                            { label: 'Savings Rate', color: 'rgba(241, 196, 15, 0.7)' }
+                        ];
+
+                        legendItems.forEach(item => {
+                            const legendItem = document.createElement('div');
+                            legendItem.className = 'legend-item';
+                            legendItem.innerHTML = `
+                    <div class="legend-color" style="background-color: ${item.color}"></div>
+                    <span>${item.label}</span>
+                `;
+                            legendEl.appendChild(legendItem);
+                        });
+
+                        // Create chart
+                        charts.savings = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: allDates,
+                                datasets: [
+                                    {
+                                        label: 'Income',
+                                        data: allIncome,
+                                        borderColor: 'rgba(39, 174, 96, 0.7)',
+                                        backgroundColor: 'rgba(39, 174, 96, 0.2)',
+                                        tension: 0.4,
+                                        fill: false,
+                                        yAxisID: 'y'
+                                    },
+                                    {
+                                        label: 'Spending',
+                                        data: allSpending,
+                                        borderColor: 'rgba(231, 76, 60, 0.7)',
+                                        backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                                        tension: 0.4,
+                                        fill: false,
+                                        yAxisID: 'y'
+                                    },
+                                    {
+                                        label: 'Savings',
+                                        data: allSavings,
+                                        borderColor: 'rgba(52, 152, 219, 0.7)',
+                                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                                        tension: 0.4,
+                                        fill: false,
+                                        yAxisID: 'y'
+                                    },
+                                    {
+                                        label: 'Savings Rate (%)',
+                                        data: allSavingsRate,
+                                        borderColor: 'rgba(241, 196, 15, 0.7)',
+                                        backgroundColor: 'rgba(241, 196, 15, 0.2)',
+                                        tension: 0.4,
+                                        fill: false,
+                                        yAxisID: 'y1'
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        },
+                                        ticks: {
+                                            maxTicksLimit: 12
+                                        }
+                                    },
+                                    y: {
+                                        position: 'left',
+                                        grid: {
+                                            borderDash: [5, 5]
+                                        },
+                                        ticks: {
+                                            callback: function (value) {
+                                                return '$' + value.toLocaleString();
+                                            }
+                                        }
+                                    },
+                                    y1: {
+                                        position: 'right',
+                                        grid: {
+                                            display: false
+                                        },
+                                        ticks: {
+                                            callback: function (value) {
+                                                return value.toFixed(1) + '%';
+                                            }
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
+                                        callbacks: {
+                                            label: function (context) {
+                                                if (context.dataset.label === 'Savings Rate (%)') {
+                                                    return context.dataset.label + ': ' + context.raw.toFixed(2) + '%';
+                                                }
+                                                return context.dataset.label + ': $' + context.raw.toFixed(2);
+                                            }
+                                        }
+                                    },
+                                    annotation: {
+                                        annotations: {
+                                            line1: {
+                                                type: 'line',
+                                                xMin: dates.length - 1,
+                                                xMax: dates.length - 1,
+                                                borderColor: 'rgba(0, 0, 0, 0.5)',
+                                                borderWidth: 2,
+                                                borderDash: [6, 6],
+                                                label: {
+                                                    content: 'Forecast Start',
+                                                    position: 'start',
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                                    font: {
+                                                        size: 12
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    function showError(message) {
+                        const errorDiv = document.getElementById('error');
+                        errorDiv.textContent = message;
+                        errorDiv.style.display = 'block';
+                        document.getElementById('loading').style.display = 'none';
+                    }
+                </script>
+                <script type="text/javascript">
+                    function googleTranslateElementInit() {
+                        new google.translate.TranslateElement(
+                            { pageLanguage: 'en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE },
+                            'google_translate_element'
+                        );
+                    }
+                </script>
+                <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit">
+                </script>
+
+      
+    </body>
+    
+    </html>
